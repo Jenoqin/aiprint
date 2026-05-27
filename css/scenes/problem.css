@@ -1,0 +1,342 @@
+/* ============================================
+   Scene 1: 问题引出 — 手工拼版的困难
+   ============================================ */
+
+/* ── 场景背景 ── */
+.scene--problem {
+  background: var(--bg-primary);
+  /* 细微噪点纹理 */
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(239, 68, 68, 0.03) 0%, transparent 50%);
+}
+
+/* ── 左侧：交互区域 ── */
+.problem-interactive {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ── Canvas 包裹 ── */
+#problem-canvas-wrap,
+.problem-canvas-wrap {
+  position: relative;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  overflow: visible;            /* 允许拖拽出界时看到提示 */
+  background: var(--bg-surface);
+  transition: border-color var(--transition-normal);
+}
+
+#problem-canvas-wrap:hover {
+  border-color: var(--border-active);
+}
+
+#problem-canvas-wrap canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 碰撞震动 */
+#problem-canvas-wrap.shake {
+  animation: shake 0.45s ease;
+  border-color: var(--accent-red);
+  box-shadow: var(--shadow-glow-red);
+}
+
+/* ── 浪费面积显示 ── */
+.problem-waste-display {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  padding: var(--space-2) var(--space-4);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(var(--glass-blur));
+  z-index: var(--z-base);
+  pointer-events: none;
+  min-width: 100px;
+}
+
+.problem-waste-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.problem-waste-value {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--accent-red);
+  line-height: 1;
+  transition: color var(--transition-normal);
+}
+
+/* 根据浪费程度变色 */
+.problem-waste-value.waste-high {
+  color: var(--accent-red);
+  text-shadow: 0 0 12px var(--accent-red-glow);
+}
+
+.problem-waste-value.waste-mid {
+  color: var(--accent-amber);
+  text-shadow: 0 0 12px var(--accent-amber-glow);
+}
+
+.problem-waste-value.waste-low {
+  color: var(--accent-green);
+  text-shadow: 0 0 12px var(--accent-green-glow);
+}
+
+/* ── 书页拖拽托盘 ── */
+.problem-book-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(var(--glass-blur));
+}
+
+/* ── 托盘中的单个书页方块 ── */
+.tray-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 90px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: grab;
+  user-select: none;
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 左侧颜色条 */
+.tray-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--tray-item-color, var(--accent-blue));
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.tray-item:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-active);
+  box-shadow: var(--shadow-glow);
+  background: var(--bg-card-hover);
+}
+
+.tray-item:active {
+  cursor: grabbing;
+  transform: translateY(-1px) scale(0.97);
+}
+
+/* 已放置状态：置灰 */
+.tray-item.placed {
+  opacity: 0.35;
+  pointer-events: none;
+  filter: grayscale(0.6);
+  transform: none;
+}
+
+.tray-item-name {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.tray-item-size {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── 右侧：痛点卡片 ── */
+.problem-pain-points {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ── 痛点卡片 ── */
+.pain-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-left: 3px solid var(--accent-red);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(var(--glass-blur));
+  transition: all var(--transition-normal);
+}
+
+.pain-card:hover {
+  border-color: var(--accent-red);
+  box-shadow: var(--shadow-glow-red);
+  transform: translateX(4px);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+/* ── 痛点图标 ── */
+.pain-icon {
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ── 痛点文字 ── */
+.pain-text {
+  flex: 1;
+}
+
+.pain-text strong {
+  display: block;
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.pain-text p {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.pain-text code {
+  color: var(--accent-amber);
+  background: rgba(245, 158, 11, 0.1);
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85em;
+}
+
+/* ── 公式卡片 ── */
+.pain-formula {
+  position: relative;
+  padding: var(--space-6) var(--space-5);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  text-align: center;
+  overflow: hidden;
+}
+
+/* 背景装饰 */
+.pain-formula::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-amber), transparent);
+  opacity: 0.6;
+}
+
+.formula-content {
+  font-size: var(--font-size-lg);
+  color: var(--text-primary);
+}
+
+/* ── 公式角标 ── */
+.formula-badge {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  padding: 2px var(--space-3);
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--accent-amber);
+  letter-spacing: 0.05em;
+}
+
+/* ── 拖拽覆盖层（跟随鼠标时） ── */
+.drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: var(--z-overlay);
+  opacity: 0.85;
+  border: 2px dashed var(--accent-blue);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-xs);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  color: var(--text-primary);
+  backdrop-filter: blur(4px);
+  transition: opacity var(--transition-fast);
+  box-shadow: var(--shadow-glow);
+}
+
+/* ── 响应式 ── */
+@media (max-width: 1024px) {
+  .problem-book-tray {
+    justify-content: center;
+  }
+
+  .tray-item {
+    min-width: 80px;
+  }
+
+  .problem-waste-display {
+    top: var(--space-2);
+    right: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+  }
+
+  .problem-waste-value {
+    font-size: var(--font-size-xl);
+  }
+}
+
+@media (max-width: 768px) {
+  .pain-card {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .pain-formula {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .tray-item {
+    min-width: 70px;
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .tray-item-name {
+    font-size: 10px;
+  }
+}

@@ -1,0 +1,297 @@
+/* ============================================
+   Scene 5: AI + OR-Tools 协同工作流
+   ============================================ */
+
+.scene--ai-workflow {
+  background-color: var(--bg-primary);
+}
+
+/* ── 管线容器 ── */
+.pipeline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  padding: var(--space-10) 0;
+  margin-bottom: var(--space-12);
+  overflow-x: auto;
+}
+
+/* ── 管线阶段 ── */
+.pipeline-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 160px;
+  padding: var(--space-5);
+  position: relative;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.5s var(--ease-out-expo), transform 0.5s var(--ease-out-back);
+}
+
+.pipeline-stage.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ── 阶段图标 ── */
+.pipeline-icon {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-3xl);
+  background: var(--bg-card);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--border-subtle);
+  margin-bottom: var(--space-3);
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.pipeline-label {
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  margin-top: var(--space-1);
+  text-align: center;
+}
+
+.pipeline-detail {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: var(--space-1);
+}
+
+/* ── 阶段类型变体 ── */
+.pipeline-stage[data-stage="ai"] .pipeline-icon {
+  border-color: var(--accent-purple);
+  box-shadow: var(--shadow-glow-purple);
+}
+
+.pipeline-stage[data-stage="ai"].visible .pipeline-icon {
+  animation: glow-pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 20px var(--accent-purple-glow), 0 0 40px rgba(139, 92, 246, 0.15);
+}
+
+.pipeline-stage[data-stage="ortools"] .pipeline-icon {
+  border-color: var(--accent-blue);
+  box-shadow: var(--shadow-glow);
+}
+
+.pipeline-stage[data-stage="ortools"].visible .pipeline-icon {
+  animation: glow-pulse 2s ease-in-out 0.5s infinite;
+  box-shadow: 0 0 20px var(--accent-blue-glow), 0 0 40px rgba(59, 130, 246, 0.15);
+}
+
+/* ── 连接线 ── */
+.pipeline-connector {
+  width: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 20px; /* 对齐到图标中心 */
+  position: relative;
+  flex-shrink: 0;
+}
+
+.pipeline-flow {
+  height: 3px;
+  width: 100%;
+  background: var(--bg-card);
+  border-radius: var(--radius-full);
+  position: relative;
+  overflow: hidden;
+}
+
+.pipeline-flow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--accent-blue), var(--accent-purple), transparent);
+  border-radius: var(--radius-full);
+}
+
+.pipeline-flow.active::after {
+  animation: pipeline-data-flow 1.2s ease-in-out forwards;
+}
+
+@keyframes pipeline-data-flow {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* 持续流动（初始动画结束后） */
+.pipeline-flow.flowing::after {
+  animation: pipeline-data-flow-loop 2s linear infinite;
+}
+
+@keyframes pipeline-data-flow-loop {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* ── Pipeline Checks ── */
+.pipeline-checks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+  width: 100%;
+}
+
+.pipeline-check {
+  font-size: var(--font-size-xs);
+  color: var(--accent-green);
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.pipeline-check.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ── AI 子视觉区域（神经网络小图） ── */
+.pipeline-sub-visual {
+  width: 120px;
+  height: 60px;
+  margin-top: var(--space-2);
+}
+
+/* ── Pipeline 粒子 ── */
+.pipeline-particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+/* ── 对比表格 ── */
+.comparison-table {
+  background: var(--gradient-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  backdrop-filter: blur(var(--glass-blur));
+}
+
+.comparison-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.comparison-table th {
+  background: var(--bg-card);
+  padding: var(--space-4) var(--space-5);
+  text-align: left;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-subtle);
+  white-space: nowrap;
+}
+
+.comparison-table td {
+  padding: var(--space-4) var(--space-5);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.comparison-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.comparison-table tbody tr {
+  transition: background-color var(--transition-fast);
+}
+
+.comparison-table tbody tr:hover {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+/* ── 表格高亮行 ── */
+.table-highlight {
+  background: rgba(59, 130, 246, 0.08) !important;
+  box-shadow: inset 0 0 30px rgba(59, 130, 246, 0.05);
+}
+
+.table-highlight td {
+  color: var(--text-primary) !important;
+  font-weight: 600;
+}
+
+/* ── 辅助颜色类 ── */
+.text-red {
+  color: var(--accent-red) !important;
+}
+
+.text-green {
+  color: var(--accent-green) !important;
+}
+
+/* ── 响应式：管线纵向 ── */
+@media (max-width: 900px) {
+  .pipeline {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: var(--space-6) 0;
+  }
+
+  .pipeline-connector {
+    width: 3px;
+    height: 40px;
+    padding-top: 0;
+    flex-direction: column;
+  }
+
+  .pipeline-flow {
+    width: 3px;
+    height: 100%;
+  }
+
+  .pipeline-flow::after {
+    width: 100%;
+    height: 100%;
+    top: -100%;
+    left: 0;
+  }
+
+  .pipeline-flow.active::after {
+    animation: pipeline-data-flow-vertical 1.2s ease-in-out forwards;
+  }
+
+  .pipeline-flow.flowing::after {
+    animation: pipeline-data-flow-vertical-loop 2s linear infinite;
+  }
+
+  @keyframes pipeline-data-flow-vertical {
+    0% { top: -100%; }
+    100% { top: 100%; }
+  }
+
+  @keyframes pipeline-data-flow-vertical-loop {
+    0% { top: -100%; }
+    100% { top: 100%; }
+  }
+
+  .pipeline-stage {
+    width: auto;
+  }
+
+  .comparison-table {
+    overflow-x: auto;
+  }
+}

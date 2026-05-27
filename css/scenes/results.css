@@ -1,0 +1,253 @@
+/* ============================================
+   Scene 6: 实战效果对比
+   ============================================ */
+
+.scene--results {
+  background-color: var(--bg-primary);
+}
+
+/* ── 对比区域 ── */
+.results-comparison {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ── 对比容器 ── */
+.comparison-wrapper {
+  position: relative;
+  display: flex;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ── 左右分栏 ── */
+.comparison-side {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.comparison-side canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ── Before 侧: 偏暖灰蒙版 ── */
+.comparison-before {
+  position: relative;
+}
+
+.comparison-before::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 20, 10, 0.12);
+  pointer-events: none;
+}
+
+/* ── After 侧: 鲜艳 ── */
+.comparison-after {
+  position: relative;
+}
+
+/* ── 标签 ── */
+.comparison-label {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  z-index: 5;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+  user-select: none;
+}
+
+.comparison-label--highlight {
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: white;
+  box-shadow: var(--shadow-glow);
+}
+
+/* ── 对比滑块 ── */
+.comparison-slider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 4px;
+  background: var(--accent-blue);
+  cursor: ew-resize;
+  z-index: 10;
+  transform: translateX(-50%);
+  box-shadow: 0 0 12px var(--accent-blue-glow);
+  touch-action: none;
+}
+
+.comparison-slider-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background: var(--accent-blue);
+  transform: translateX(-50%);
+}
+
+.comparison-slider-handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--accent-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  cursor: grab;
+  box-shadow: var(--shadow-glow-strong), var(--shadow-lg);
+  transition: transform var(--transition-fast);
+  user-select: none;
+}
+
+.comparison-slider-handle:active {
+  cursor: grabbing;
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* ── 指标卡片网格 ── */
+.results-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-6);
+  margin-top: var(--space-12);
+}
+
+/* ── 单个指标卡片 ── */
+.metric-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  text-align: center;
+  transition: all var(--transition-normal);
+}
+
+.metric-card:hover {
+  border-color: var(--border-active);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-4px);
+}
+
+/* ── 旧值 ── */
+.metric-before {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  font-size: var(--font-size-lg);
+  font-family: var(--font-mono);
+}
+
+/* ── 箭头 ── */
+.metric-arrow {
+  color: var(--accent-blue);
+  font-size: var(--font-size-2xl);
+  margin: var(--space-2) 0;
+  user-select: none;
+}
+
+/* ── 新值 ── */
+.metric-after {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: var(--font-size-4xl);
+  background: var(--gradient-blue-purple);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.2;
+}
+
+.metric-after--check {
+  background: linear-gradient(135deg, var(--accent-green), #34d399);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── 标签 ── */
+.metric-label {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-3);
+}
+
+/* ── 变化徽章 ── */
+.metric-change {
+  display: inline-block;
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--accent-green);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+/* ── 响应式 ── */
+@media (max-width: 1024px) {
+  .results-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .results-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-wrapper {
+    flex-direction: column;
+  }
+
+  .comparison-slider {
+    /* 横向时变成水平 */
+    top: 50%;
+    bottom: auto;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 4px;
+    transform: translateY(-50%);
+  }
+
+  .comparison-slider-handle {
+    top: 50%;
+    left: 50%;
+    cursor: ns-resize;
+  }
+
+  .metric-card {
+    padding: var(--space-6);
+  }
+
+  .metric-after {
+    font-size: var(--font-size-3xl);
+  }
+}

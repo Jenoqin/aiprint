@@ -1,0 +1,476 @@
+/* ============================================
+   Scene 2 — CP-SAT 求解器 & NoOverlap2D
+   ============================================ */
+
+/* ── 场景背景 ── */
+.scene--solver {
+  background: var(--bg-primary);
+  position: relative;
+}
+
+.scene--solver::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 600px 400px at 30% 50%, rgba(59, 130, 246, 0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 400px 300px at 80% 60%, rgba(139, 92, 246, 0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ── 左侧：建模步骤动画区 (60%) ── */
+.solver-animation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.solver-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ── 步骤导航条 ── */
+.solver-step-nav {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  position: relative;
+  padding: 0 var(--space-2);
+}
+
+/* 步骤间连接线 */
+.solver-step-nav::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: var(--space-6);
+  right: var(--space-6);
+  height: 2px;
+  background: var(--border-subtle);
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+.solver-step-btn {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+  flex: 1;
+  justify-content: center;
+}
+
+.solver-step-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-active);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.solver-step-btn--active {
+  background: var(--accent-blue);
+  color: white;
+  border-color: var(--accent-blue);
+  box-shadow: var(--shadow-glow), 0 0 12px var(--accent-blue-glow);
+}
+
+.solver-step-btn--active:hover {
+  background: var(--accent-blue-dark);
+  color: white;
+}
+
+/* 已完成的步骤 */
+.solver-step-btn--done {
+  border-color: var(--accent-green);
+  color: var(--accent-green);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+/* ── 主 Canvas 容器 ── */
+.solver-canvas-wrap {
+  margin-top: var(--space-2);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+  transition: border-color var(--transition-normal);
+}
+
+.solver-canvas-wrap:hover {
+  border-color: var(--border-active);
+}
+
+.solver-canvas-wrap canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ── 描述文字卡片 ── */
+.solver-description {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(var(--glass-blur));
+  min-height: 48px;
+}
+
+.solver-description::before {
+  content: '💡';
+  flex-shrink: 0;
+  font-size: var(--font-size-lg);
+  line-height: 1.6;
+}
+
+.solver-description p {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  margin: 0;
+  transition: opacity var(--transition-normal);
+}
+
+/* ── 代码块区域 ── */
+.solver-code-block {
+  transition: opacity var(--transition-normal);
+}
+
+.solver-code-block .code-block {
+  font-size: var(--font-size-xs);
+  line-height: 1.8;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.solver-code-block .code-block pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.solver-code-block .code-block code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  color: var(--text-primary);
+}
+
+/* 代码切换动画 */
+.solver-code-block.is-transitioning .code-block pre {
+  animation: codeFadeSwitch 0.4s var(--ease-out-expo);
+}
+
+@keyframes codeFadeSwitch {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ── 右侧：交互面板 (40%) ── */
+.solver-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.solver-panel > .card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+}
+
+/* 面板标题 */
+.solver-panel-title {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+/* 面板 Canvas 容器 */
+.solver-panel-canvas-wrap {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-surface);
+  position: relative;
+  transition: border-color var(--transition-normal);
+}
+
+.solver-panel-canvas-wrap:hover {
+  border-color: var(--border-active);
+}
+
+.solver-panel-canvas-wrap canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ── 面板控制区 ── */
+.solver-panel-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* 画布尺寸输入 */
+.solver-panel-size {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.solver-panel-size > label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.solver-panel-inputs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.solver-panel-inputs > span {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+}
+
+/* 数字输入框 */
+.panel-input {
+  width: 80px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  outline: none;
+  transition: all var(--transition-fast);
+  -moz-appearance: textfield;
+}
+
+.panel-input::-webkit-inner-spin-button,
+.panel-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.panel-input:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px var(--accent-blue-glow);
+}
+
+.panel-input:hover {
+  border-color: var(--border-active);
+}
+
+/* ── 矩形列表 ── */
+.solver-panel-items {
+  max-height: 150px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-right: var(--space-1);
+}
+
+/* 矩形列表滚动条 */
+.solver-panel-items::-webkit-scrollbar {
+  width: 4px;
+}
+.solver-panel-items::-webkit-scrollbar-track {
+  background: transparent;
+}
+.solver-panel-items::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: var(--radius-full);
+}
+
+/* 单个矩形条目 */
+.panel-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-surface);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--text-muted);
+  transition: all var(--transition-fast);
+  position: relative;
+  min-height: 36px;
+}
+
+.panel-item:hover {
+  background: var(--bg-card);
+}
+
+/* 颜色圆点 */
+.panel-item-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* 尺寸标签 */
+.panel-item-size {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+/* 删除按钮 */
+.panel-item-delete {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.panel-item:hover .panel-item-delete {
+  opacity: 1;
+}
+
+.panel-item-delete:hover {
+  color: var(--accent-red);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* ── 操作按钮行 ── */
+.solver-panel-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.solver-panel-actions .btn {
+  flex: 1;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  padding: var(--space-2) var(--space-4);
+}
+
+/* ── 结果面板 ── */
+.solver-panel-result {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  backdrop-filter: blur(var(--glass-blur));
+  animation: resultSlideIn 0.4s var(--ease-out-expo);
+}
+
+@keyframes resultSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 结果行 */
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.result-row + .result-row {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.result-value {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--accent-blue-light);
+}
+
+/* 利用率高亮 */
+.result-value--high {
+  color: var(--accent-green);
+}
+
+.result-value--low {
+  color: var(--accent-amber);
+}
+
+/* ── 响应式 ── */
+@media (max-width: 1024px) {
+  .solver-step-nav {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .solver-step-nav::before {
+    display: none;
+  }
+
+  .solver-step-btn {
+    flex: 0 1 auto;
+    font-size: var(--font-size-xs);
+    padding: var(--space-1) var(--space-3);
+  }
+
+  .solver-panel > .card {
+    padding: var(--space-4);
+  }
+}
+
+@media (max-width: 768px) {
+  .solver-step-btn {
+    font-size: var(--font-size-xs);
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .solver-description {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .solver-panel-actions {
+    flex-direction: column;
+  }
+}
