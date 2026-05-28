@@ -238,6 +238,28 @@
       roundRect(ctx, sheetX, sheetY, sheetW, sheetH, 4);
       ctx.fillStyle = COLORS.sheet;
       ctx.fill();
+
+      // 网格线
+      ctx.save();
+      roundRect(ctx, sheetX, sheetY, sheetW, sheetH, 4);
+      ctx.clip();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 0.8;
+      const gridStep = 25;
+      for (let gx = sheetX + gridStep; gx < sheetX + sheetW; gx += gridStep) {
+        ctx.beginPath();
+        ctx.moveTo(gx, sheetY);
+        ctx.lineTo(gx, sheetY + sheetH);
+        ctx.stroke();
+      }
+      for (let gy = sheetY + gridStep; gy < sheetY + sheetH; gy += gridStep) {
+        ctx.beginPath();
+        ctx.moveTo(sheetX, gy);
+        ctx.lineTo(sheetX + sheetW, gy);
+        ctx.stroke();
+      }
+      ctx.restore();
+
       ctx.strokeStyle = 'rgba(148,163,184,0.2)';
       ctx.lineWidth = 1;
       ctx.stroke();
@@ -632,6 +654,36 @@
 
     function draw() {
       ctx.clearRect(0, 0, w, h);
+
+      // 绘制纸张底色
+      roundRect(ctx, sx, sy, sw, sh, 4);
+      ctx.fillStyle = COLORS.sheet;
+      ctx.fill();
+
+      // 绘制方格线网理
+      ctx.save();
+      roundRect(ctx, sx, sy, sw, sh, 4);
+      ctx.clip();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 0.8;
+      const gridStep = 25;
+      for (let gx = sx + gridStep; gx < sx + sw; gx += gridStep) {
+        ctx.beginPath();
+        ctx.moveTo(gx, sy);
+        ctx.lineTo(gx, sy + sh);
+        ctx.stroke();
+      }
+      for (let gy = sy + gridStep; gy < sy + sh; gy += gridStep) {
+        ctx.beginPath();
+        ctx.moveTo(sx, gy);
+        ctx.lineTo(sx + sw, gy);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      ctx.strokeStyle = 'rgba(148,163,184,0.2)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
 
       const now = performance.now();
 

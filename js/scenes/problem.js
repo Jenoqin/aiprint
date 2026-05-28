@@ -417,12 +417,12 @@
   /* ── 绘制版面 ── */
   function drawSheet() {
     // 版面底色
-    ctx.fillStyle = '#0d1117';
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.5)';
     roundRect(ctx, SHEET_X, SHEET_Y, SHEET_PX_W, SHEET_PX_H, 4);
     ctx.fill();
 
     // 网格线
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.lineWidth = 0.8;
     const gridStep = 40;
     for (let gx = SHEET_X + gridStep; gx < SHEET_X + SHEET_PX_W; gx += gridStep) {
