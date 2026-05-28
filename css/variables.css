@@ -4,47 +4,47 @@
 
 :root {
   /* ── 背景色 ── */
-  --bg-primary: #F8F9FA;
-  --bg-secondary: #f0f2f5;
-  --bg-card: #F2F6FA;
-  --bg-card-hover: #EBF1F6;
+  --bg-primary: #F8FAFC;        /* Slate-tinted crisp background */
+  --bg-secondary: #F1F5F9;      /* Slightly darker slate for sections/footer */
+  --bg-card: #ffffff;           /* Floating white card background */
+  --bg-card-hover: #ffffff;     /* Keep white on hover, focus on glow/elevation */
   --bg-surface: #ffffff;
 
   /* ── 文字色 ── */
-  --text-primary: #191919;
-  --text-secondary: #595959;
-  --text-muted: #8c8c8c;
-  --text-accent: #191919;
+  --text-primary: #0F172A;      /* Deep Slate for high-quality typography */
+  --text-secondary: #475569;    /* Muted Slate */
+  --text-muted: #64748B;        /* Muted elements */
+  --text-accent: #0F172A;
 
   /* ── 强调色 ── */
   --accent-blue: #003B73;
   --accent-blue-light: #00509E;
   --accent-blue-dark: #002244;
-  --accent-blue-glow: rgba(0, 59, 115, 0.1);
-  --accent-green: #389e0d;
-  --accent-green-glow: rgba(56, 158, 13, 0.1);
-  --accent-amber: #d46b08;
-  --accent-amber-glow: rgba(212, 107, 8, 0.1);
-  --accent-red: #c8102e;
-  --accent-red-glow: rgba(200, 16, 46, 0.1);
-  --accent-purple: #3C2A69;
-  --accent-purple-glow: rgba(60, 42, 105, 0.08);
+  --accent-blue-glow: rgba(0, 80, 158, 0.08);
+  --accent-green: #16a34a;
+  --accent-green-glow: rgba(22, 163, 74, 0.08);
+  --accent-amber: #ea580c;
+  --accent-amber-glow: rgba(234, 88, 12, 0.08);
+  --accent-red: #dc2626;
+  --accent-red-glow: rgba(220, 38, 38, 0.08);
+  --accent-purple: #4f46e5;
+  --accent-purple-glow: rgba(79, 70, 229, 0.08);
 
   /* ── 渐变 ── */
   --gradient-blue-purple: linear-gradient(135deg, #003B73 0%, #005B9F 100%);
-  --gradient-blue-green: linear-gradient(135deg, #00509E 0%, #389E0D 100%);
-  --gradient-hero: radial-gradient(circle at top right, rgba(0, 59, 115, 0.03), transparent 60%), radial-gradient(circle at bottom left, rgba(0, 91, 159, 0.02), transparent 50%);
+  --gradient-blue-green: linear-gradient(135deg, #00509E 0%, #16A34A 100%);
+  --gradient-hero: radial-gradient(circle at top right, rgba(0, 80, 158, 0.04), transparent 60%), radial-gradient(circle at bottom left, rgba(0, 91, 159, 0.02), transparent 50%);
   --gradient-card: #ffffff;
 
   /* ── 边框 ── */
-  --border-subtle: rgba(0, 0, 0, 0.08);
-  --border-active: rgba(0, 0, 0, 0.15);
-  --border-glow: rgba(0, 0, 0, 0.05);
+  --border-subtle: rgba(15, 23, 42, 0.06);   /* Slate border */
+  --border-active: rgba(0, 80, 158, 0.15);    /* Blue-gray border */
+  --border-glow: rgba(0, 80, 158, 0.2);
 
-  /* ── 毛玻璃 (Removed glass effect) ── */
-  --glass-bg: #ffffff;
-  --glass-border: rgba(0, 0, 0, 0.05);
-  --glass-blur: 0px;
+  /* ── 毛玻璃 ── */
+  --glass-bg: rgba(248, 250, 252, 0.75);
+  --glass-border: rgba(15, 23, 42, 0.06);
+  --glass-blur: 12px;
 
   /* ── 字体 ── */
   --font-sans: 'Outfit', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
@@ -68,17 +68,17 @@
   --radius-2xl: 24px;
   --radius-full: 9999px;
 
-  /* ── 阴影 (Noah's Ark style soft subtle shadows) ── */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.12);
-  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.15);
-  --shadow-glow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-glow-strong: 0 10px 24px rgba(0, 0, 0, 0.12);
-  --shadow-glow-green: 0 4px 12px rgba(56, 158, 13, 0.1);
-  --shadow-glow-amber: 0 4px 12px rgba(212, 107, 8, 0.1);
-  --shadow-glow-red: 0 4px 12px rgba(200, 16, 46, 0.1);
-  --shadow-glow-purple: 0 4px 12px rgba(0, 0, 0, 0.08);
+  /* ── 阴影 ── */
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.03);
+  --shadow-md: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 4px -1px rgba(15, 23, 42, 0.03);
+  --shadow-lg: 0 10px 25px -5px rgba(0, 59, 115, 0.06), 0 8px 16px -6px rgba(0, 59, 115, 0.04);
+  --shadow-xl: 0 20px 35px -8px rgba(0, 59, 115, 0.12), 0 12px 20px -8px rgba(0, 59, 115, 0.08);
+  --shadow-glow: 0 0 20px rgba(0, 80, 158, 0.08);
+  --shadow-glow-strong: 0 0 30px rgba(0, 80, 158, 0.15);
+  --shadow-glow-green: 0 4px 15px rgba(22, 163, 74, 0.08);
+  --shadow-glow-amber: 0 4px 15px rgba(234, 88, 12, 0.08);
+  --shadow-glow-red: 0 4px 15px rgba(220, 38, 38, 0.08);
+  --shadow-glow-purple: 0 4px 15px rgba(79, 70, 229, 0.08);
 
   /* ── 间距 ── */
   --space-1: 0.25rem;

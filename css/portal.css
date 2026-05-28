@@ -19,8 +19,8 @@ body {
   width: 100%;
   height: 100%;
   background-image: 
-    linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(15, 23, 42, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.02) 1px, transparent 1px);
   background-size: 40px 40px;
   z-index: -1;
   pointer-events: none;
@@ -28,8 +28,10 @@ body {
 
 /* Minimalist Navbar */
 .navbar-portal {
-  background: var(--bg-primary);
-  border-bottom: 1px solid var(--border-subtle);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-bottom: 1px solid var(--glass-border);
   transition: all 0.3s ease;
 }
 
@@ -80,7 +82,10 @@ body {
 }
 
 .hero-title-gradient {
-  color: var(--text-primary);
+  background: linear-gradient(135deg, var(--accent-blue-light) 0%, #0080ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   position: relative;
   display: inline-block;
 }
@@ -97,7 +102,7 @@ body {
 /* Portal Cards */
 .portal-card {
   background: var(--bg-card);
-  border: 1px solid transparent;
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-2xl);
   height: 100%;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -108,7 +113,7 @@ body {
   text-decoration: none;
   color: inherit;
   cursor: default;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
 }
 
 .portal-card.card-live {
@@ -122,7 +127,7 @@ body {
   left: 0;
   width: 100%;
   height: 3px;
-  background: var(--text-primary);
+  background: linear-gradient(90deg, var(--accent-blue) 0%, #0080ff 100%);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -135,16 +140,16 @@ body {
 
 .portal-card:hover {
   transform: translateY(-8px);
-  background: var(--bg-card-hover);
-  border-color: transparent;
+  background: var(--bg-card);
+  border-color: var(--border-active);
   box-shadow: var(--shadow-xl);
   color: var(--text-primary);
   text-decoration: none;
 }
 
 .portal-card.card-live:hover {
-  border-color: transparent;
-  background: var(--bg-card-hover);
+  border-color: var(--border-active);
+  background: var(--bg-card);
   box-shadow: var(--shadow-xl);
 }
 
