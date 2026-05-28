@@ -258,8 +258,8 @@ window.SolverScene = (() => {
     const sheet = getSheetRect(W, H, 30);
 
     // 始终画网格和纸张
-    drawGridDots(mainCtx, sheet);
     drawSheet(mainCtx, sheet, true);
+    drawGridDots(mainCtx, sheet);
 
     if (currentStep >= 1) {
       drawStep1Rects(mainCtx, sheet, time);
