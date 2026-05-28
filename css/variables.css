@@ -4,50 +4,50 @@
 
 :root {
   /* ── 背景色 ── */
-  --bg-primary: #0a0e1a;
-  --bg-secondary: #111827;
-  --bg-card: #1e293b;
-  --bg-card-hover: #334155;
-  --bg-surface: #0f172a;
+  --bg-primary: #F8F9FA;
+  --bg-secondary: #f0f2f5;
+  --bg-card: #F2F6FA;
+  --bg-card-hover: #EBF1F6;
+  --bg-surface: #ffffff;
 
   /* ── 文字色 ── */
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --text-accent: #3b82f6;
+  --text-primary: #191919;
+  --text-secondary: #595959;
+  --text-muted: #8c8c8c;
+  --text-accent: #191919;
 
   /* ── 强调色 ── */
-  --accent-blue: #3b82f6;
-  --accent-blue-light: #60a5fa;
-  --accent-blue-dark: #2563eb;
-  --accent-blue-glow: rgba(59, 130, 246, 0.3);
-  --accent-green: #10b981;
-  --accent-green-glow: rgba(16, 185, 129, 0.3);
-  --accent-amber: #f59e0b;
-  --accent-amber-glow: rgba(245, 158, 11, 0.3);
-  --accent-red: #ef4444;
-  --accent-red-glow: rgba(239, 68, 68, 0.3);
-  --accent-purple: #8b5cf6;
-  --accent-purple-glow: rgba(139, 92, 246, 0.3);
+  --accent-blue: #003B73;
+  --accent-blue-light: #00509E;
+  --accent-blue-dark: #002244;
+  --accent-blue-glow: rgba(0, 59, 115, 0.1);
+  --accent-green: #389e0d;
+  --accent-green-glow: rgba(56, 158, 13, 0.1);
+  --accent-amber: #d46b08;
+  --accent-amber-glow: rgba(212, 107, 8, 0.1);
+  --accent-red: #c8102e;
+  --accent-red-glow: rgba(200, 16, 46, 0.1);
+  --accent-purple: #3C2A69;
+  --accent-purple-glow: rgba(60, 42, 105, 0.08);
 
   /* ── 渐变 ── */
-  --gradient-blue-purple: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  --gradient-blue-green: linear-gradient(135deg, #3b82f6, #10b981);
-  --gradient-hero: linear-gradient(180deg, #0a0e1a 0%, #111827 100%);
-  --gradient-card: linear-gradient(145deg, rgba(30,41,59,0.8), rgba(15,23,42,0.6));
+  --gradient-blue-purple: linear-gradient(135deg, #003B73 0%, #005B9F 100%);
+  --gradient-blue-green: linear-gradient(135deg, #00509E 0%, #389E0D 100%);
+  --gradient-hero: radial-gradient(circle at top right, rgba(0, 59, 115, 0.03), transparent 60%), radial-gradient(circle at bottom left, rgba(0, 91, 159, 0.02), transparent 50%);
+  --gradient-card: #ffffff;
 
   /* ── 边框 ── */
-  --border-subtle: rgba(148, 163, 184, 0.1);
-  --border-active: rgba(59, 130, 246, 0.5);
-  --border-glow: rgba(59, 130, 246, 0.3);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-active: rgba(0, 0, 0, 0.15);
+  --border-glow: rgba(0, 0, 0, 0.05);
 
-  /* ── 毛玻璃 ── */
-  --glass-bg: rgba(17, 24, 39, 0.8);
-  --glass-border: rgba(148, 163, 184, 0.15);
-  --glass-blur: 12px;
+  /* ── 毛玻璃 (Removed glass effect) ── */
+  --glass-bg: #ffffff;
+  --glass-border: rgba(0, 0, 0, 0.05);
+  --glass-blur: 0px;
 
   /* ── 字体 ── */
-  --font-sans: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Outfit', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
@@ -68,17 +68,17 @@
   --radius-2xl: 24px;
   --radius-full: 9999px;
 
-  /* ── 阴影 ── */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
-  --shadow-glow-strong: 0 0 40px rgba(59, 130, 246, 0.25);
-  --shadow-glow-green: 0 0 20px rgba(16, 185, 129, 0.2);
-  --shadow-glow-amber: 0 0 20px rgba(245, 158, 11, 0.2);
-  --shadow-glow-red: 0 0 20px rgba(239, 68, 68, 0.2);
-  --shadow-glow-purple: 0 0 20px rgba(139, 92, 246, 0.2);
+  /* ── 阴影 (Noah's Ark style soft subtle shadows) ── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.15);
+  --shadow-glow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-glow-strong: 0 10px 24px rgba(0, 0, 0, 0.12);
+  --shadow-glow-green: 0 4px 12px rgba(56, 158, 13, 0.1);
+  --shadow-glow-amber: 0 4px 12px rgba(212, 107, 8, 0.1);
+  --shadow-glow-red: 0 4px 12px rgba(200, 16, 46, 0.1);
+  --shadow-glow-purple: 0 4px 12px rgba(0, 0, 0, 0.08);
 
   /* ── 间距 ── */
   --space-1: 0.25rem;

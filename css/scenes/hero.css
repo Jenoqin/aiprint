@@ -71,8 +71,8 @@
   gap: var(--space-2);
   width: fit-content;
   padding: var(--space-2) var(--space-4);
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid var(--border-active);
+  background: rgba(0, 59, 115, 0.06);
+  border: 1px solid rgba(0, 59, 115, 0.15);
   border-radius: var(--radius-full);
   font-size: var(--font-size-sm);
   font-weight: 600;

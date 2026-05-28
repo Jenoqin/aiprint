@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="OR-Tools 智能拼版原理演示 — 交互式探索印刷行业 2D Bin Packing 与多目标排产优化">
+  <title>OR-Tools × 智能拼版 — 原理演示</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- KaTeX -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/scenes/hero.css">
+  <link rel="stylesheet" href="css/scenes/solver.css">
+  <link rel="stylesheet" href="css/scenes/ai-workflow.css">
+  <link rel="stylesheet" href="css/scenes/summary.css">
+</head>
+<body>
+
+  <!-- 顶部进度条 -->
+  <div id="progress-bar" aria-hidden="true"></div>
+
+  <!-- 顶部导航栏 -->
+  <nav id="main-nav" style="background: white; border-bottom: 1px solid var(--border-subtle); height: 60px; display: flex; align-items: center; z-index: 1000; position: fixed; top: 0; width: 100%; transform: none !important; opacity: 1 !important; transition: none !important;">
+    <div style="max-width: 1320px; width: 100%; margin: 0 auto; padding: 0 1rem; display: flex; justify-content: space-between; align-items: center;">
+      <a href="#" style="font-weight: 700; font-size: 1.25rem; color: #191919; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+        <span>⚙️ HNXX印务 · 智能拼版</span>
+      </a>
+      <div>
+        <a href="index.html" style="font-weight: 500; color: #191919; text-decoration: none; display: flex; align-items: center; gap: 4px; transition: color 0.3s;" onmouseover="this.style.color='#595959'" onmouseout="this.style.color='#191919'">
+          🏠 返回主页
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 右侧圆点导航 -->
+  <div id="dot-nav">
+    <button class="dot-nav-item dot-nav-item--active" data-scene="0" data-label="首页"></button>
+    <button class="dot-nav-item" data-scene="1" data-label="CP-SAT 求解器"></button>
+    <button class="dot-nav-item" data-scene="2" data-label="AI + OR-Tools"></button>
+    <button class="dot-nav-item" data-scene="3" data-label="总结"></button>
+  </div>
+
+  <!-- ========================================
+       Scene 0: Hero Landing
+       ======================================== -->
+  <section id="scene-0" class="scene scene--hero">
+    <div class="hero-bg-grid"></div>
+    <div class="scene-content hero-content">
+      <div class="hero-main">
+        <div class="hero-text">
+          <div class="hero-tag">
+            <span class="hero-tag-dot"></span>
+            Interactive Demo
+          </div>
+          <h1 class="hero-title">
+            <span class="hero-title-line">OR-Tools</span>
+            <span class="hero-title-line hero-title-gradient">× 智能拼版</span>
+          </h1>
+          <p class="hero-subtitle">
+            从数学约束到工业落地 — 印刷排版的终极求解引擎<br>
+            交互式探索 CP-SAT 求解器如何毫秒级解决 NP-Hard 问题
+          </p>
+          <button class="btn btn--primary btn--glow hero-cta" id="hero-cta">
+            开始探索 <span class="hero-cta-arrow">↓</span>
+          </button>
+        </div>
+        <div class="hero-visual">
+          <canvas id="hero-canvas" width="600" height="450"></canvas>
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <span class="hero-stat-value" id="hero-stat-time">0.34s</span>
+              <span class="hero-stat-label">求解时间</span>
+            </div>
+            <div class="hero-stat">
+              <span class="hero-stat-value" id="hero-stat-rate">96.7%</span>
+              <span class="hero-stat-label">版面利用率</span>
+            </div>
+            <div class="hero-stat">
+              <span class="hero-stat-value hero-stat-check">✓</span>
+              <span class="hero-stat-label">约束满足</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-scroll-hint">
+      <span>向下滚动</span>
+      <div class="hero-scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ========================================
+       Scene 1: CP-SAT 求解器
+       ======================================== -->
+  <section id="scene-1" class="scene scene--solver">
+    <div class="scene-content">
+      <div class="scene-badge reveal">⚔️ 核心武器</div>
+      <h2 class="scene-title reveal delay-1">CP-SAT 求解器 & NoOverlap2D</h2>
+      <p class="scene-subtitle reveal delay-2">
+        OR-Tools 的 CP-SAT 约束规划求解器，内置二维无重叠约束，毫秒级确保几何合法性
+      </p>
+      <div class="split-layout split-layout--60-40">
+        <!-- 左：建模动画 -->
+        <div class="solver-animation reveal-left">
+          <div class="solver-steps">
+            <div class="solver-step-nav">
+              <button class="solver-step-btn solver-step-btn--active" data-step="0">1. 画布</button>
+              <button class="solver-step-btn" data-step="1">2. 矩形</button>
+              <button class="solver-step-btn" data-step="2">3. 坐标</button>
+              <button class="solver-step-btn" data-step="3">4. 区间</button>
+              <button class="solver-step-btn" data-step="4">5. NoOverlap</button>
+            </div>
+            <div class="canvas-container solver-canvas-wrap">
+              <canvas id="solver-canvas" width="700" height="420"></canvas>
+            </div>
+            <div class="solver-description" id="solver-desc">
+              <p>将纸张视为二维网格画布 (W × H)</p>
+            </div>
+            <div class="solver-code-block" id="solver-code">
+              <div class="code-block">
+                <div class="code-block__header">
+                  <div class="code-block__dots">
+                    <span></span><span></span><span></span>
+                  </div>
+                  <span class="code-block__lang">Python</span>
+                </div>
+                <pre id="solver-code-content"><code><span class="syn-variable">model</span> <span class="syn-operator">=</span> <span class="syn-function">cp_model.CpModel</span>()
+<span class="syn-variable">W</span>, <span class="syn-variable">H</span> <span class="syn-operator">=</span> <span class="syn-number">1194</span>, <span class="syn-number">889</span>  <span class="syn-comment"># 对开纸尺寸(mm)</span></code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 右：交互面板 -->
+        <div class="solver-panel reveal-right">
+          <div class="card">
+            <h4 class="solver-panel-title">🚀 交互式求解面板</h4>
+            <div class="solver-panel-canvas-wrap">
+              <canvas id="solver-panel-canvas" width="380" height="300"></canvas>
+            </div>
+            <div class="solver-panel-controls">
+              <div class="solver-panel-size">
+                <label>画布尺寸</label>
+                <div class="solver-panel-inputs">
+                  <input type="number" id="panel-width" value="800" min="200" max="1200" class="panel-input">
+                  <span>×</span>
+                  <input type="number" id="panel-height" value="600" min="200" max="900" class="panel-input">
+                </div>
+              </div>
+              <div class="solver-panel-items" id="panel-items-list">
+                <!-- 动态生成 -->
+              </div>
+              <div class="solver-panel-actions">
+                <button class="btn btn--secondary" id="panel-add-item">+ 添加矩形</button>
+                <button class="btn btn--primary btn--glow" id="panel-solve">🚀 求解</button>
+              </div>
+              <div class="solver-panel-result" id="panel-result" style="display:none;">
+                <div class="result-row">
+                  <span>利用率</span>
+                  <span class="result-value" id="panel-result-rate">—</span>
+                </div>
+                <div class="result-row">
+                  <span>求解时间</span>
+                  <span class="result-value" id="panel-result-time">—</span>
+                </div>
+                <div class="result-row">
+                  <span>已放入</span>
+                  <span class="result-value" id="panel-result-placed">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================
+       Scene 2: AI + OR-Tools 协同
+       ======================================= -->
+  <section id="scene-2" class="scene scene--ai-workflow">
+    <div class="scene-content">
+      <div class="scene-badge reveal">🤖 AI 协同</div>
+      <h2 class="scene-title reveal delay-1">AI + OR-Tools = 完美组合拳</h2>
+      <p class="scene-subtitle reveal delay-2">
+        大模型快速给出初始方案，OR-Tools 进行像素级精确求解
+      </p>
+      <div class="pipeline reveal" id="pipeline">
+        <div class="pipeline-stage" data-stage="orders">
+          <div class="pipeline-icon">📦</div>
+          <div class="pipeline-label">订单池</div>
+          <div class="pipeline-detail">1000+ 订单</div>
+          <div class="pipeline-particles" id="pipeline-particles-0"></div>
+        </div>
+        <div class="pipeline-connector">
+          <div class="pipeline-flow"></div>
+        </div>
+        <div class="pipeline-stage" data-stage="ai">
+          <div class="pipeline-icon">🧠</div>
+          <div class="pipeline-label">AI 先锋</div>
+          <div class="pipeline-detail">搜索空间 ↓90%</div>
+          <div class="pipeline-sub-visual" id="ai-neural-net"></div>
+        </div>
+        <div class="pipeline-connector">
+          <div class="pipeline-flow"></div>
+        </div>
+        <div class="pipeline-stage" data-stage="ortools">
+          <div class="pipeline-icon">⚙️</div>
+          <div class="pipeline-label">OR-Tools 主力</div>
+          <div class="pipeline-detail">像素级微调</div>
+          <div class="pipeline-checks" id="pipeline-checks">
+            <div class="pipeline-check" data-delay="0">✓ NoOverlap2D</div>
+            <div class="pipeline-check" data-delay="1">✓ 咬口约束</div>
+            <div class="pipeline-check" data-delay="2">✓ 丝缕方向</div>
+            <div class="pipeline-check" data-delay="3">✓ Guillotine</div>
+            <div class="pipeline-check" data-delay="4">✓ 成本最优</div>
+          </div>
+        </div>
+        <div class="pipeline-connector">
+          <div class="pipeline-flow"></div>
+        </div>
+        <div class="pipeline-stage" data-stage="output">
+          <div class="pipeline-icon">📋</div>
+          <div class="pipeline-label">生产文件</div>
+          <div class="pipeline-detail">JDF / PPF</div>
+        </div>
+      </div>
+      <!-- 对比表格 -->
+      <div class="comparison-table reveal delay-3">
+        <table>
+          <thead>
+            <tr>
+              <th>方案</th>
+              <th>速度</th>
+              <th>精度</th>
+              <th>约束保证</th>
+              <th>适用场景</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>纯 AI</td>
+              <td>⚡ 极快</td>
+              <td>⭐⭐⭐</td>
+              <td class="text-red">❌ 无保证</td>
+              <td>初始方案</td>
+            </tr>
+            <tr>
+              <td>纯 OR-Tools</td>
+              <td>🐢 可能超时</td>
+              <td>⭐⭐⭐⭐⭐</td>
+              <td class="text-green">✅ 100%</td>
+              <td>小规模</td>
+            </tr>
+            <tr class="table-highlight">
+              <td><strong>AI + OR-Tools</strong></td>
+              <td>⚡ 快速</td>
+              <td>⭐⭐⭐⭐⭐</td>
+              <td class="text-green">✅ 100%</td>
+              <td><strong>工业落地 ✨</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================
+       Scene 3: 总结
+       ======================================== -->
+  <section id="scene-3" class="scene scene--summary">
+    <div class="scene-content">
+      <div class="scene-badge reveal">🏁 总结</div>
+      <h2 class="scene-title reveal delay-1">技术架构全景</h2>
+      <p class="scene-subtitle reveal delay-2">从订单到 CTP 出网点的完全自动化</p>
+
+      <div class="architecture reveal delay-3" id="architecture">
+        <!-- 架构图各层 -->
+        <div class="arch-layer arch-layer--input">
+          <div class="arch-layer-icon">📱</div>
+          <div class="arch-layer-content">
+            <h4>订单输入层</h4>
+            <div class="arch-tags">
+              <span class="arch-tag">ERP 系统</span>
+              <span class="arch-tag">订单解析</span>
+              <span class="arch-tag">特征提取</span>
+            </div>
+          </div>
+        </div>
+        <div class="arch-connector">
+          <div class="arch-connector-line"></div>
+          <div class="arch-connector-arrow">▼</div>
+        </div>
+        <div class="arch-layer arch-layer--ai">
+          <div class="arch-layer-icon">🧠</div>
+          <div class="arch-layer-content">
+            <h4>AI 智能层（先锋）</h4>
+            <div class="arch-tags">
+              <span class="arch-tag arch-tag--purple">VLM 语义理解</span>
+              <span class="arch-tag arch-tag--purple">DRL 初排</span>
+              <span class="arch-tag arch-tag--purple">搜索空间压缩</span>
+            </div>
+          </div>
+        </div>
+        <div class="arch-connector">
+          <div class="arch-connector-line"></div>
+          <div class="arch-connector-arrow">▼</div>
+        </div>
+        <div class="arch-layer arch-layer--ortools">
+          <div class="arch-layer-icon">⚙️</div>
+          <div class="arch-layer-content">
+            <h4>OR-Tools 精算层（主力）</h4>
+            <div class="arch-tags">
+              <span class="arch-tag arch-tag--blue">CP-SAT 约束建模</span>
+              <span class="arch-tag arch-tag--blue">NoOverlap2D</span>
+              <span class="arch-tag arch-tag--blue">多目标优化</span>
+            </div>
+            <div class="arch-sub-tags">
+              <span class="arch-tag arch-tag--subtle">咬口约束</span>
+              <span class="arch-tag arch-tag--subtle">丝缕约束</span>
+              <span class="arch-tag arch-tag--subtle">Guillotine</span>
+              <span class="arch-tag arch-tag--subtle">成本函数</span>
+            </div>
+          </div>
+        </div>
+        <div class="arch-connector">
+          <div class="arch-connector-line"></div>
+          <div class="arch-connector-arrow">▼</div>
+        </div>
+        <div class="arch-layer arch-layer--output">
+          <div class="arch-layer-icon">🖨️</div>
+          <div class="arch-layer-content">
+            <h4>生产输出层</h4>
+            <div class="arch-tags">
+              <span class="arch-tag arch-tag--green">JDF/PPF 生成</span>
+              <span class="arch-tag arch-tag--green">CTP 出版</span>
+              <span class="arch-tag arch-tag--green">印刷生产</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-slogan reveal delay-4">
+        <p>「从订单到 CTP 出网点的<span class="slogan-highlight">完全自动化</span>」</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scripts -->
+  <script src="js/utils.js"></script>
+  <script src="js/bin-packer.js"></script>
+  <script src="js/scroll-observer.js"></script>
+  <script src="js/scenes/hero.js"></script>
+  <script src="js/scenes/solver.js"></script>
+  <script src="js/scenes/ai-workflow.js"></script>
+  <script src="js/scenes/summary.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

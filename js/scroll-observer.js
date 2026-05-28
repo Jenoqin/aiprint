@@ -75,12 +75,15 @@ window.ScrollObserver = {
     const bar = document.getElementById('progress-bar');
     if (!bar) return;
 
-    window.addEventListener('scroll', () => {
-      const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-      bar.style.width = progress + '%';
-    }, { passive: true });
+    // Only run scroll listener fallback if native CSS scroll-driven animations are not supported
+    if (!CSS.supports('animation-timeline', 'scroll()')) {
+      window.addEventListener('scroll', () => {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const progressPercentage = docHeight > 0 ? (scrollTop / docHeight) : 0;
+        bar.style.transform = `scaleX(${progressPercentage})`;
+      }, { passive: true });
+    }
   },
 
   /** 导航（顶部 + 圆点） */

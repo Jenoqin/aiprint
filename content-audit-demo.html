@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI智能内容校对系统 - HNXX印务</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tw: {
+                            dark: '#000000',
+                            primary: '#191919',
+                            secondary: '#595959',
+                            light: '#ffffff',
+                            border: '#e2e8f0',
+                            danger: '#dc2626',
+                            warning: '#ea580c',
+                            caution: '#ca8a04',
+                            info: '#191919'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['PingFang SC', 'Microsoft YaHei', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Phosphor Icons for neutral elegant icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        /* Custom Styles & Scrollbar */
+        body { background-color: #f8fafc; color: #334155; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Typography overrides */
+        .glass-panel { background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); border: 1px solid #e2e8f0; }
+        
+        /* Animations */
+        @keyframes pulse-border {
+            0% { border-color: #cbd5e1; }
+            50% { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.2); }
+            100% { border-color: #cbd5e1; }
+        }
+        .drag-active { animation: pulse-border 1.5s infinite; background-color: #f0f9ff !important; }
+        
+        @keyframes scan-line {
+            0% { transform: translateY(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(600px); opacity: 0; }
+        }
+        .scanner {
+            position: absolute; left: 0; right: 0; top: 0; height: 3px;
+            background: linear-gradient(to right, transparent, #3b82f6, transparent);
+            box-shadow: 0 0 12px rgba(59,130,246,0.6);
+            animation: scan-line 2s linear infinite;
+            display: none;
+            z-index: 10;
+        }
+
+        /* Risk Levels Highlight Boxes */
+        .hl-box { position: absolute; cursor: pointer; transition: all 0.2s ease; z-index: 5; }
+        .hl-box:hover { z-index: 20; }
+        
+        .hl-danger { border: 2px solid #dc2626; background: rgba(220, 38, 38, 0.12); animation: blink-danger 2s infinite; }
+        .hl-danger:hover { background: rgba(220, 38, 38, 0.25); }
+        @keyframes blink-danger { 0%,100% { box-shadow: 0 0 0 rgba(220,38,38,0); } 50% { box-shadow: 0 0 8px rgba(220,38,38,0.4); } }
+        
+        .hl-warning { border: 2px solid #ea580c; background: rgba(234, 88, 12, 0.12); }
+        .hl-warning:hover { background: rgba(234, 88, 12, 0.25); }
+        
+        .hl-caution { border: 2px solid #ca8a04; background: rgba(202, 138, 4, 0.12); }
+        .hl-caution:hover { background: rgba(202, 138, 4, 0.25); }
+        
+        .hl-info { border: 2px solid #2563eb; background: rgba(37, 99, 235, 0.12); }
+        .hl-info:hover { background: rgba(37, 99, 235, 0.25); }
+
+        /* Tooltip */
+        .hl-tooltip {
+            position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-10px);
+            width: 320px; background: white; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.2);
+            border: 1px solid #e2e8f0; padding: 12px; pointer-events: none; opacity: 0;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); z-index: 30;
+        }
+        .hl-box:hover .hl-tooltip { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(-5px); }
+        .hl-tooltip::after {
+            content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+            border-width: 6px; border-style: solid; border-color: white transparent transparent transparent;
+        }
+
+        /* Active Engine Highlight */
+        .engine-active { border-left: 3px solid #191919; background: #fafafa !important; border-color: #e5e5e5 !important; }
+        
+        /* Global Layout */
+        #app-container { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #main-workspace { display: flex; flex: 1; overflow: hidden; }
+        
+        .pdf-page {
+            background: white; width: 420px; height: 594px; /* A4 aspect ratio roughly */
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); position: relative;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/200.png" viewBox="0 0 100 100"><rect fill="%23f8fafc" width="100" height="100"/></svg>');
+            background-size: cover; border: 1px solid #e2e8f0;
+        }
+        
+        /* Custom Checkbox */
+        .toggle-checkbox:checked { right: 0; border-color: #191919; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #191919; }
+        .toggle-checkbox { right: 4px; z-index: 1; transition: all 0.3s; }
+    </style>
+</head>
+<body class="text-sm font-sans antialiased overflow-hidden">
+    <div id="app-container">
+        
+        <!-- 1. 顶部导航栏: 极简白 (Matched with other pages) -->
+        <header class="h-[60px] bg-white border-b border-slate-200 flex items-center justify-center shrink-0 z-50">
+            <div class="w-full max-w-[1320px] mx-auto px-3 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <a href="#" class="font-bold text-[1.25rem] text-slate-900 tracking-wide flex items-center gap-2 decoration-transparent hover:no-underline">
+                        <span>⚙️ HNXX印务 · 智能内容审核</span>
+                    </a>
+                </div>
+                <div class="flex items-center">
+                    <ul class="flex gap-2 m-0 p-0 list-none">
+                        <li>
+                            <a href="index.html" class="flex items-center gap-1 font-medium text-slate-800 hover:text-slate-600 transition decoration-transparent hover:no-underline">
+                                🏠 返回主页
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主工作区 -->
+        <div id="main-workspace">
+            
+            <!-- 3. 校对维度控制台 (Left Sidebar): 极简白 -->
+            <aside class="w-[280px] bg-white border-r border-slate-200 flex flex-col shrink-0 z-10 shadow-[2px_0_10px_rgba(0,0,0,0.03)]">
+                <div class="p-4 border-b border-slate-200 font-bold text-slate-700 flex justify-between items-center bg-slate-50/80">
+                    <span>校对引擎配置</span>
+                    <i class="ph ph-faders text-slate-400"></i>
+                </div>
+                <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-2 bg-white" id="engine-list">
+                    <!-- Engine items will be injected by JS -->
+                </div>
+            </aside>
+
+            <!-- 中间核心区: 浅灰 -->
+            <main class="flex-1 flex flex-col bg-slate-100 relative overflow-hidden">
+                
+                <!-- 2. Hero 上传区 (默认显示，校对后隐藏) -->
+                <div id="hero-upload" class="absolute inset-0 z-40 bg-slate-100 flex flex-col items-center justify-center p-8 transition-opacity duration-500">
+                    <div class="w-full max-w-2xl">
+                        <div id="drop-zone" class="border-2 border-dashed border-slate-300 rounded-xl bg-white p-12 text-center transition-all shadow-sm">
+                            <div class="w-16 h-16 bg-blue-50 text-tw-info rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <i class="ph ph-file-pdf text-3xl"></i>
+                            </div>
+                            <h2 class="text-xl font-bold text-slate-700 mb-2">拖拽印前排版文件至此</h2>
+                            <p class="text-slate-500 mb-6">支持 PDF, Word, InDesign (IDML) 格式</p>
+                            
+                            <!-- 预载Mock文件信息 -->
+                            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 text-left shadow-sm inline-block w-full max-w-md">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <i class="ph ph-file-pdf text-red-500 text-2xl"></i>
+                                        <div>
+                                            <div class="font-bold text-slate-700">高中语文必修上册_第3单元_付印稿.pdf</div>
+                                            <div class="text-xs text-slate-500">87.3 MB • 128 页</div>
+                                        </div>
+                                    </div>
+                                    <button class="text-slate-400 hover:text-red-500 transition"><i class="ph ph-x"></i></button>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 text-xs text-slate-600 bg-white p-2 rounded border border-slate-100">
+                                    <div><span class="text-slate-400">出版社:</span> 人民教育出版社</div>
+                                    <div><span class="text-slate-400">印次:</span> 2026年7月第3次印刷</div>
+                                    <div class="col-span-2"><span class="text-slate-400">ISBN:</span> 978-7-107-XXXXX-X</div>
+                                </div>
+                                <div class="mt-4 flex gap-2">
+                                    <button id="btn-start-audit" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white py-2 rounded-full font-medium transition flex justify-center items-center gap-2">
+                                        <i class="ph ph-play-circle text-lg"></i> 开始智能校对
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. 主预览区 (校对中/后显示) -->
+                <div id="preview-area" class="flex-1 flex flex-col items-center justify-center relative opacity-0 pointer-events-none transition-opacity duration-500 p-4">
+                    <div class="scanner" id="global-scanner"></div>
+                    
+                    <!-- 双页容器 -->
+                    <div class="flex gap-1 shadow-2xl relative" id="pdf-container">
+                        <!-- Left Page (Page 46) -->
+                        <div class="pdf-page bg-white relative flex flex-col justify-between p-12">
+                            <div class="text-xs text-slate-400 border-b border-slate-100 pb-2 mb-4">高中语文必修上册</div>
+                            <div class="flex-1 text-justify relative">
+                                <!-- Mock Content for Page 46 -->
+                                <h3 class="text-xl font-bold mb-4 mt-8 text-slate-800">第三单元 诗词之美</h3>
+                                <p class="mb-4 text-slate-700 leading-relaxed text-[13px]">
+                                    中华优秀传统文化是中华民族的精神命脉。正如<span class="hl-box hl-danger" style="left: -2px; padding: 0 2px;" data-case="1">习总书记</span>所指出的那样，我们要坚定文化自信。在阅读古典诗词时，不仅要体会其音韵之美，更要深刻领悟其蕴含的家国情怀。
+                                </p>
+                                <p class="mb-4 text-slate-700 leading-relaxed text-[13px]">
+                                    李白的《将进酒》体现了盛唐诗人的豪迈与自信。全诗气势磅礴，如<span class="hl-box hl-warning" style="padding: 0 2px;" data-case="2">黄河之水天上来</span>，奔流到海不复回。
+                                </p>
+                                <!-- Map placeholder with missing Taiwan label -->
+                                <div class="mt-8 border border-slate-200 bg-slate-50 h-32 flex items-center justify-center relative shadow-inner">
+                                    <span class="text-slate-400 text-xs">中国历史文化名城分布图</span>
+                                    <div class="hl-box hl-danger absolute" style="right: 10px; bottom: 10px; width: 40px; height: 40px;" data-case="6"></div>
+                                </div>
+                            </div>
+                            <div class="text-center text-xs text-slate-400 mt-4">46</div>
+                        </div>
+                        
+                        <!-- Right Page (Page 47) -->
+                        <div class="pdf-page bg-white relative flex flex-col justify-between p-12">
+                            <div class="text-xs text-slate-400 border-b border-slate-100 pb-2 mb-4 text-right">第三单元</div>
+                            <div class="flex-1 relative">
+                                <!-- Mock Content for Page 47 -->
+                                <p class="mb-4 text-slate-700 leading-relaxed text-[13px]">
+                                    苏轼的词则开创了豪放一派。“大江东去，浪淘尽，千古风流人物。”通过对赤壁古战场的怀古，抒发了对历史变迁的感慨。
+                                </p>
+                                <div class="bg-slate-50 p-4 border border-slate-100 mb-4 font-serif text-sm rounded shadow-sm">
+                                    <p class="text-slate-800">词语积累：</p>
+                                    <ul class="list-disc pl-4 mt-2 text-slate-600 text-[12px]">
+                                        <li>磅礴 (páng bó)</li>
+                                        <li>须臾 (xū yú)</li>
+                                        <li>用户<span class="hl-box hl-caution" style="padding:0 2px;" data-case="4">帐号</span> (zhàng hào)</li>
+                                    </ul>
+                                </div>
+                                <div class="hl-box hl-info absolute" style="left: 0; bottom: 60px; width: 100%; height: 20px;" data-case="5">
+                                    <p class="text-[10px] text-slate-500">注：背诵并默写全诗。体会议论与抒情结合的妙处。</p>
+                                </div>
+                            </div>
+                            <div class="text-center text-xs text-slate-400 mt-4">47</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 缩略图导航 -->
+                    <div class="mt-6 flex gap-2 overflow-x-auto max-w-full pb-2">
+                        <!-- Thumbs via JS -->
+                        <div class="w-12 h-16 bg-white border border-slate-300 opacity-60 cursor-pointer hover:opacity-100 transition flex items-end justify-center pb-1 text-[10px] shadow-sm">44</div>
+                        <div class="w-12 h-16 bg-white border border-slate-300 opacity-60 cursor-pointer hover:opacity-100 transition flex items-end justify-center pb-1 text-[10px] shadow-sm">45</div>
+                        <div class="w-12 h-16 bg-white border-2 border-tw-info relative cursor-pointer flex items-end justify-center pb-1 text-[10px] font-bold shadow">
+                            46
+                            <span class="absolute -top-2 -right-2 w-4 h-4 bg-tw-danger text-white rounded-full flex items-center justify-center text-[9px] shadow">2</span>
+                        </div>
+                        <div class="w-12 h-16 bg-white border-2 border-tw-info relative cursor-pointer flex items-end justify-center pb-1 text-[10px] font-bold shadow">
+                            47
+                            <span class="absolute -top-2 -right-2 w-4 h-4 bg-tw-warning text-white rounded-full flex items-center justify-center text-[9px] shadow">2</span>
+                        </div>
+                        <div class="w-12 h-16 bg-white border border-slate-300 opacity-60 cursor-pointer hover:opacity-100 transition flex items-end justify-center pb-1 text-[10px] shadow-sm">48</div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- 5. 右侧详情面板 (Right Panel): 极简白 -->
+            <aside class="w-[320px] bg-white border-l border-slate-200 flex flex-col shrink-0 translate-x-full transition-transform duration-300 z-10 shadow-[-2px_0_10px_rgba(0,0,0,0.03)]" id="right-panel">
+                <div class="p-4 border-b border-slate-200 bg-slate-50/80 flex justify-between items-center">
+                    <span class="font-bold text-slate-800">校对分析报告</span>
+                    <button id="btn-export-report" class="text-tw-info text-xs flex items-center gap-1 hover:underline font-medium"><i class="ph ph-export"></i> 导出完整报告</button>
+                </div>
+                
+                <!-- Dashboard -->
+                <div class="p-4 border-b border-slate-100 bg-white flex items-center gap-4">
+                    <div class="relative w-20 h-20 shrink-0">
+                        <!-- Simple SVG Donut -->
+                        <svg viewBox="0 0 36 36" class="w-full h-full transform -rotate-90">
+                            <path class="text-slate-100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="100, 100" />
+                            <path class="text-blue-500" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="60, 100" />
+                            <path class="text-yellow-500" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="40, 100" />
+                            <path class="text-red-500" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="10, 100" />
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center flex-col">
+                            <span class="text-xl font-bold text-slate-800" id="total-issues">0</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs w-full">
+                        <div class="flex items-center justify-between"><span class="flex items-center gap-1 text-slate-600"><span class="w-2 h-2 rounded bg-tw-danger"></span> 致命</span> <span class="font-mono text-slate-800">2</span></div>
+                        <div class="flex items-center justify-between"><span class="flex items-center gap-1 text-slate-600"><span class="w-2 h-2 rounded bg-tw-warning"></span> 严重</span> <span class="font-mono text-slate-800">4</span></div>
+                        <div class="flex items-center justify-between"><span class="flex items-center gap-1 text-slate-600"><span class="w-2 h-2 rounded bg-tw-caution"></span> 一般</span> <span class="font-mono text-slate-800">6</span></div>
+                        <div class="flex items-center justify-between"><span class="flex items-center gap-1 text-slate-600"><span class="w-2 h-2 rounded bg-tw-info"></span> 提示</span> <span class="font-mono text-slate-800">24</span></div>
+                    </div>
+                </div>
+
+                <!-- Issue Details -->
+                <div class="flex-1 overflow-y-auto bg-slate-50/50 relative" id="issue-detail-container">
+                    <div class="absolute inset-0 flex items-center justify-center text-slate-400 text-sm p-8 text-center" id="empty-detail">
+                        点击左侧 PDF 预览区的高亮标注查看深度分析
+                    </div>
+                    <div class="p-4 hidden flex-col gap-4" id="active-detail">
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- 6. 底部操作栏: 极简白 -->
+        <footer class="h-16 bg-white border-t border-slate-200 flex items-center justify-between px-6 shrink-0 z-50 translate-y-full transition-transform duration-300 shadow-[0_-2px_10px_rgba(0,0,0,0.02)]" id="bottom-bar">
+            <div class="flex items-center gap-3 text-slate-600 text-sm">
+                <i class="ph ph-check-circle text-green-500 text-xl"></i>
+                <span id="footer-status">本次校对耗时 28.6 秒，相当于人工 4 小时工作量</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <button class="px-4 py-2 border border-slate-200 text-slate-700 rounded-full hover:bg-slate-50 transition text-sm flex items-center gap-1 bg-white shadow-sm"><i class="ph ph-checks"></i> 全部采纳提示级建议</button>
+                <div class="h-6 w-px bg-slate-200 mx-1"></div>
+                <button class="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-full hover:bg-red-100 transition text-sm flex items-center gap-1 font-medium"><i class="ph ph-hand-palm"></i> 拦截并退回编辑部</button>
+                <button class="px-4 py-2 bg-slate-800 text-white rounded-full hover:bg-slate-900 transition text-sm flex items-center gap-1 font-medium shadow-sm"><i class="ph ph-check"></i> 强制签批通过</button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 报告模态框 -->
+    <div id="report-modal" class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm hidden flex-col items-center py-10 overflow-y-auto">
+        <div class="w-[800px] bg-white shadow-2xl relative shrink-0 rounded-sm">
+            <button class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition" onclick="document.getElementById('report-modal').classList.add('hidden')">
+                <i class="ph ph-x text-2xl"></i>
+            </button>
+            <div class="p-12">
+                <div class="border-b-2 border-tw-primary pb-6 mb-8 text-center">
+                    <h1 class="text-3xl font-bold text-tw-primary mb-2 tracking-widest">HNXX印务·AI初核报告</h1>
+                    <div class="text-slate-500 text-sm">编号：TWAudit-202607-01025 | 时间：2026-05-28 10:30</div>
+                </div>
+                <!-- 报告内容简略版 -->
+                <div class="grid grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <h4 class="font-bold text-slate-800 border-l-4 border-tw-info pl-2 mb-4">审查概况</h4>
+                        <ul class="space-y-2 text-sm text-slate-700">
+                            <li><span class="text-slate-400 inline-block w-20">文件名称：</span>高中语文必修上册_第3单元_付印稿.pdf</li>
+                            <li><span class="text-slate-400 inline-block w-20">检测模型：</span>Kimi K2.5-ContentCheck-v1</li>
+                            <li><span class="text-slate-400 inline-block w-20">总页数：</span>128 页</li>
+                            <li><span class="text-slate-400 inline-block w-20">发现问题：</span>共计 36 项</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-800 border-l-4 border-tw-danger pl-2 mb-4">阻断性风险 (致命)</h4>
+                        <div class="bg-red-50 text-red-800 p-4 rounded text-sm border border-red-100 shadow-sm">
+                            <p class="font-bold mb-1">拦截原则：不予付印</p>
+                            <ul class="list-disc pl-4 space-y-1 text-red-700">
+                                <li>P46: 领导人姓名表述残缺</li>
+                                <li>P3: 地图国界线/敏感地名标注错误</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-16 flex justify-between border-t border-slate-200 pt-8">
+                    <div><span class="text-slate-500">AI 审核模型签名：</span> <span class="font-mono text-tw-info bg-blue-50 px-2 py-1 rounded border border-blue-100">Kimi K2.5 Validated</span></div>
+                    <div><span class="text-slate-500">人工终审复核签名：</span> _________________</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Javascript Logic -->
+    <script>
+        // Data Models
+        const engines = [
+            { id: 'e1', name: '政治安全引擎', level: 'danger', count: 2, label: '致命' },
+            { id: 'e2', name: '知识性校验引擎', level: 'warning', count: 1, label: '严重' },
+            { id: 'e3', name: '图文一致性引擎', level: 'warning', count: 3, label: '严重' },
+            { id: 'e4', name: '跨文档一致性引擎', level: 'caution', count: 5, label: '一般' },
+            { id: 'e5', name: '版式合规引擎', level: 'info', count: 8, label: '提示' },
+            { id: 'e6', name: '版权合规引擎', level: 'caution', count: 1, label: '一般' },
+            { id: 'e7', name: '语言规范引擎', level: 'info', count: 12, label: '提示' },
+            { id: 'e8', name: '印刷适性引擎', level: 'info', count: 4, label: '提示' }
+        ];
+
+        const cases = {
+            1: {
+                level: 'danger', title: '疑似领导人姓名表述不规范',
+                desc: '在涉及国家领导人的正式报道与教材正文中，应使用全称规范表述，不得遗漏姓氏或职务。',
+                context: '...中华民族的精神命脉。正如<del class="text-tw-danger">习总书记</del>所指出的那样，我们要坚定...',
+                suggestion: '正如<ins class="text-green-600 font-bold decoration-2">习近平总书记</ins>所指出...',
+                reason: '依据《新华社新闻信息报道中的禁用词和慎用词》第45条规定：对党和国家领导人职务的称呼必须准确规范。',
+                history: '本年度该类词库报警已拦截 14 次'
+            },
+            2: {
+                level: 'warning', title: '图文语义冲突',
+                desc: 'AI视觉模型识别图片内容为黄河壶口瀑布，但周围的图注或正文引用上下文为“长江三峡”。',
+                context: '...全诗气势磅礴，如<del class="text-tw-warning">黄河之水天上来</del>...',
+                suggestion: '需核对配图与诗句是否匹配。',
+                reason: '多模态视觉比对：图片特征命中“壶口瀑布”(置信度98.2%)，与周围文本语境存在空间语义冲突。',
+                history: '跨模态审核模型已生效'
+            },
+            6: {
+                level: 'danger', title: '地图板块残缺',
+                desc: '检测到插图中包含中国地图轮廓，但缺失台湾省或南海诸岛的关键轮廓线，存在严重政治风险。',
+                context: '【图片审核：中国历史文化名城分布图】',
+                suggestion: '退回美编部，替换为标准天地图来源审图号合规的地图文件。',
+                reason: '视觉CV模型：检测到中国地图版图，边缘轮廓缺失目标区域 (x:452, y:812)。',
+                history: '地图类图片属于高风险拦截项目'
+            },
+            4: {
+                level: 'caution', title: '全书用词不一致 (帐号/账号)',
+                desc: '本页使用了“帐号”，但在第15页、第22页等处使用了“账号”，同书体例不统一。',
+                context: '...须臾 (xū yú) | 用户<del class="text-tw-caution">帐号</del> (zhàng hào)...',
+                suggestion: '建议统一替换为<ins class="text-green-600 font-bold">账号</ins>。',
+                reason: '依据现代汉语词典第七版及常见规范，IT类账户推荐使用“账号”。',
+                history: '全书共发现 5 处体例不统一'
+            },
+            5: {
+                level: 'info', title: '字号低于印刷下限',
+                desc: '检测到页面底部注脚文字字号过小，可能导致印刷糊版或影响青少年视力。',
+                context: '...<span class="text-tw-info text-[10px]">注：背诵并默写全诗。体会议论与抒情结合的妙处。</span>',
+                suggestion: '建议将其字号放大至至少 6pt (约小六号字)。',
+                reason: '依据《中小学教科书幅面尺寸及版面额度》标准，正文辅助文字不宜过小。',
+                history: '印刷工艺知识库规则命中'
+            }
+        };
+
+        // Render Sidebar
+        const engineList = document.getElementById('engine-list');
+        engines.forEach((e, idx) => {
+            const colorMap = {
+                'danger': 'bg-red-50 text-red-700 border border-red-100',
+                'warning': 'bg-orange-50 text-orange-700 border border-orange-100',
+                'caution': 'bg-yellow-50 text-yellow-700 border border-yellow-100',
+                'info': 'bg-blue-50 text-blue-700 border border-blue-100'
+            };
+            const badgeBg = colorMap[e.level];
+            
+            const el = document.createElement('div');
+            el.className = 'bg-white border border-slate-200 rounded-lg p-3 flex items-center justify-between opacity-50 grayscale transition-all duration-300 shadow-sm hover:shadow hover:border-slate-300';
+            el.id = `engine-${idx}`;
+            el.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="relative inline-block w-8 mr-2 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="toggle" id="toggle-${idx}" checked class="toggle-checkbox absolute block w-4 h-4 rounded-full bg-white border-4 border-slate-200 appearance-none cursor-pointer"/>
+                        <label for="toggle-${idx}" class="toggle-label block overflow-hidden h-4 rounded-full bg-slate-300 cursor-pointer"></label>
+                    </div>
+                    <div>
+                        <div class="font-medium text-slate-700 text-[13px]">${e.name}</div>
+                        <div class="flex gap-2 mt-1">
+                            <span class="text-[10px] px-1.5 rounded-sm ${badgeBg} shadow-sm">${e.label}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-slate-500 text-xs font-mono font-bold" id="count-${idx}">0</div>
+            `;
+            engineList.appendChild(el);
+        });
+
+        // Interactive logic
+        document.getElementById('btn-start-audit').addEventListener('click', () => {
+            // Hide hero, show preview
+            document.getElementById('hero-upload').classList.add('opacity-0', 'pointer-events-none');
+            document.getElementById('preview-area').classList.remove('opacity-0', 'pointer-events-none');
+            document.getElementById('right-panel').classList.remove('translate-x-full');
+            document.getElementById('bottom-bar').classList.remove('translate-y-full');
+            
+            // Animation sequence
+            let delay = 0;
+            
+            // Activate engines
+            engines.forEach((e, idx) => {
+                setTimeout(() => {
+                    const el = document.getElementById(`engine-${idx}`);
+                    el.classList.remove('opacity-50', 'grayscale');
+                    el.classList.add('engine-active', 'shadow-md');
+                    
+                    // Simulate count up
+                    let c = 0;
+                    const cEl = document.getElementById(`count-${idx}`);
+                    const int = setInterval(() => {
+                        c++;
+                        cEl.textContent = c;
+                        cEl.classList.remove('bg-slate-100', 'text-slate-500');
+                        cEl.classList.add('bg-tw-info', 'text-white', 'shadow-sm');
+                        if (c >= e.count) clearInterval(int);
+                    }, 50);
+                }, delay);
+                delay += 300;
+            });
+            
+            // Show Scanner
+            const scanner = document.getElementById('global-scanner');
+            scanner.style.display = 'block';
+            
+            setTimeout(() => {
+                scanner.style.display = 'none';
+                document.getElementById('total-issues').textContent = '36';
+            }, delay + 1000);
+        });
+
+        // Hover Highlights
+        document.querySelectorAll('.hl-box').forEach(box => {
+            // Create tooltip on the fly to avoid DOM clutter
+            const id = box.dataset.case;
+            const data = cases[id];
+            if (!data) return;
+            
+            const tt = document.createElement('div');
+            tt.className = 'hl-tooltip text-left cursor-default';
+            tt.innerHTML = `
+                <div class="text-[11px] uppercase tracking-wider text-slate-400 mb-1 font-bold">AI 识别问题</div>
+                <div class="text-sm font-bold text-slate-800 mb-2">${data.title}</div>
+                <div class="text-xs text-slate-600 mb-3 leading-relaxed">${data.desc}</div>
+                <div class="flex gap-2">
+                    <button class="bg-tw-info text-white text-xs px-3 py-1.5 rounded shadow-sm hover:bg-blue-700 font-medium transition">查看详情</button>
+                    <button class="border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded shadow-sm hover:bg-slate-50 transition">忽略</button>
+                </div>
+            `;
+            box.appendChild(tt);
+
+            // Click to show right panel details
+            box.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Reset others
+                document.querySelectorAll('.hl-box').forEach(b => b.style.zIndex = 5);
+                box.style.zIndex = 25;
+                
+                document.getElementById('empty-detail').classList.add('hidden');
+                const pnl = document.getElementById('active-detail');
+                pnl.classList.remove('hidden');
+                pnl.classList.add('flex');
+                
+                const bgMap = {
+                    'danger': 'bg-red-50 text-red-700 border-red-200',
+                    'warning': 'bg-orange-50 text-orange-700 border-orange-200',
+                    'caution': 'bg-yellow-50 text-yellow-700 border-yellow-200',
+                    'info': 'bg-blue-50 text-blue-700 border-blue-200'
+                };
+                
+                pnl.innerHTML = `
+                    <div class="inline-block border px-2 py-1 rounded-sm text-xs font-bold w-max ${bgMap[data.level]} shadow-sm">
+                        发现风险
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 leading-tight">${data.title}</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">${data.desc}</p>
+                    
+                    <div class="bg-white border border-slate-200 p-3 rounded-lg shadow-sm mt-2">
+                        <div class="text-xs text-slate-400 mb-2 font-medium">原文上下文</div>
+                        <div class="text-sm bg-slate-50/50 p-3 rounded border border-slate-100 font-serif leading-relaxed text-slate-700 shadow-inner">
+                            ${data.context}
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-50/80 border border-green-200 p-3 rounded-lg mt-2 shadow-sm">
+                        <div class="text-xs text-green-700 mb-2 font-bold flex items-center gap-1"><i class="ph ph-sparkle"></i> AI 修改建议</div>
+                        <div class="text-sm text-slate-800 mb-1">${data.suggestion}</div>
+                        <button class="mt-3 w-full bg-white border border-green-300 text-green-700 py-1.5 rounded text-sm hover:bg-green-50 font-bold shadow-sm transition">一键替换采纳</button>
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-slate-200">
+                        <div class="text-xs text-slate-500 mb-2 flex items-center gap-1 font-medium"><i class="ph ph-brain"></i> AI 推理依据</div>
+                        <p class="text-[12px] text-slate-600 leading-relaxed bg-slate-100/50 p-2 rounded">${data.reason}</p>
+                    </div>
+                    <div class="mt-2 text-[11px] text-slate-400 bg-white border border-slate-100 p-2 rounded flex items-center gap-1 shadow-sm">
+                        <i class="ph ph-clock-counter-clockwise"></i> 历史检索: ${data.history}
+                    </div>
+                `;
+            });
+        });
+
+        // Export Report
+        document.getElementById('btn-export-report').addEventListener('click', () => {
+            document.getElementById('report-modal').classList.remove('hidden');
+            document.getElementById('report-modal').classList.add('flex');
+        });
+
+        // Drag Drop Visuals
+        const dropZone = document.getElementById('drop-zone');
+        ['dragenter', 'dragover'].forEach(evt => {
+            dropZone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-active');
+            });
+        });
+        ['dragleave', 'drop'].forEach(evt => {
+            dropZone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-active');
+            });
+        });
+    </script>
+</body>
+</html>
