@@ -297,6 +297,32 @@
     U.drawRoundedRect(ctx, sheetArea.x, sheetArea.y, sheetArea.w, sheetArea.h, 8);
     ctx.fillStyle = 'rgba(30, 41, 59, 0.5)';
     ctx.fill();
+
+    // 限制在圆角矩形内绘制网格线
+    ctx.clip();
+
+    // 绘制方格线网理
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.08)';
+    ctx.lineWidth = 0.5;
+    var gridStep = 25;
+    for (var gx = sheetArea.x + gridStep; gx < sheetArea.x + sheetArea.w; gx += gridStep) {
+      ctx.beginPath();
+      ctx.moveTo(gx, sheetArea.y);
+      ctx.lineTo(gx, sheetArea.y + sheetArea.h);
+      ctx.stroke();
+    }
+    for (var gy = sheetArea.y + gridStep; gy < sheetArea.y + sheetArea.h; gy += gridStep) {
+      ctx.beginPath();
+      ctx.moveTo(sheetArea.x, gy);
+      ctx.lineTo(sheetArea.x + sheetArea.w, gy);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+
+    // 绘制边框
+    ctx.save();
+    U.drawRoundedRect(ctx, sheetArea.x, sheetArea.y, sheetArea.w, sheetArea.h, 8);
     ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
     ctx.lineWidth = 1;
     ctx.setLineDash([4, 4]);

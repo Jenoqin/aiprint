@@ -155,15 +155,26 @@ window.SolverScene = (() => {
   // ────────────────────────────────────────
 
   function drawGridDots(ctx, sheet) {
+    ctx.save();
+    roundRect(ctx, sheet.x, sheet.y, sheet.w, sheet.h, 4);
+    ctx.clip();
+
     const spacing = 20;
-    ctx.fillStyle = 'rgba(148,163,184,0.12)';
-    for (let gx = sheet.x; gx < sheet.x + sheet.w; gx += spacing * sheet.scale) {
-      for (let gy = sheet.y; gy < sheet.y + sheet.h; gy += spacing * sheet.scale) {
-        ctx.beginPath();
-        ctx.arc(gx, gy, 1, 0, Math.PI * 2);
-        ctx.fill();
-      }
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.08)';
+    ctx.lineWidth = 0.5;
+    for (let gx = sheet.x + spacing * sheet.scale; gx < sheet.x + sheet.w; gx += spacing * sheet.scale) {
+      ctx.beginPath();
+      ctx.moveTo(gx, sheet.y);
+      ctx.lineTo(gx, sheet.y + sheet.h);
+      ctx.stroke();
     }
+    for (let gy = sheet.y + spacing * sheet.scale; gy < sheet.y + sheet.h; gy += spacing * sheet.scale) {
+      ctx.beginPath();
+      ctx.moveTo(sheet.x, gy);
+      ctx.lineTo(sheet.x + sheet.w, gy);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   function drawSheet(ctx, sheet, showLabel) {
@@ -664,6 +675,28 @@ window.SolverScene = (() => {
     roundRect(panelCtx, offX, offY, binW * scale, binH * scale, 3);
     panelCtx.fillStyle = 'rgba(30,41,59,0.5)';
     panelCtx.fill();
+
+    // 绘制方格线网理
+    panelCtx.save();
+    roundRect(panelCtx, offX, offY, binW * scale, binH * scale, 3);
+    panelCtx.clip();
+    panelCtx.strokeStyle = 'rgba(148, 163, 184, 0.06)';
+    panelCtx.lineWidth = 0.5;
+    const gridStep = 20;
+    for (let gx = offX + gridStep; gx < offX + binW * scale; gx += gridStep) {
+      panelCtx.beginPath();
+      panelCtx.moveTo(gx, offY);
+      panelCtx.lineTo(gx, offY + binH * scale);
+      panelCtx.stroke();
+    }
+    for (let gy = offY + gridStep; gy < offY + binH * scale; gy += gridStep) {
+      panelCtx.beginPath();
+      panelCtx.moveTo(offX, gy);
+      panelCtx.lineTo(offX + binW * scale, gy);
+      panelCtx.stroke();
+    }
+    panelCtx.restore();
+
     panelCtx.strokeStyle = 'rgba(148,163,184,0.3)';
     panelCtx.lineWidth = 1;
     panelCtx.stroke();
