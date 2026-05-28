@@ -160,8 +160,8 @@ window.SolverScene = (() => {
     ctx.clip();
 
     const spacing = 20;
-    ctx.strokeStyle = 'rgba(148, 163, 184, 0.08)';
-    ctx.lineWidth = 0.5;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.lineWidth = 0.8;
     for (let gx = sheet.x + spacing * sheet.scale; gx < sheet.x + sheet.w; gx += spacing * sheet.scale) {
       ctx.beginPath();
       ctx.moveTo(gx, sheet.y);
@@ -680,8 +680,8 @@ window.SolverScene = (() => {
     panelCtx.save();
     roundRect(panelCtx, offX, offY, binW * scale, binH * scale, 3);
     panelCtx.clip();
-    panelCtx.strokeStyle = 'rgba(148, 163, 184, 0.06)';
-    panelCtx.lineWidth = 0.5;
+    panelCtx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    panelCtx.lineWidth = 0.8;
     const gridStep = 20;
     for (let gx = offX + gridStep; gx < offX + binW * scale; gx += gridStep) {
       panelCtx.beginPath();

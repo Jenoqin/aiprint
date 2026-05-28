@@ -422,8 +422,8 @@
     ctx.fill();
 
     // 网格线
-    ctx.strokeStyle = 'rgba(148,163,184,0.06)';
-    ctx.lineWidth = 0.5;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = 0.8;
     const gridStep = 40;
     for (let gx = SHEET_X + gridStep; gx < SHEET_X + SHEET_PX_W; gx += gridStep) {
       ctx.beginPath();

@@ -302,8 +302,8 @@
     ctx.clip();
 
     // 绘制方格线网理
-    ctx.strokeStyle = 'rgba(148, 163, 184, 0.08)';
-    ctx.lineWidth = 0.5;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.lineWidth = 0.8;
     var gridStep = 25;
     for (var gx = sheetArea.x + gridStep; gx < sheetArea.x + sheetArea.w; gx += gridStep) {
       ctx.beginPath();
