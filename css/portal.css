@@ -155,7 +155,7 @@ body {
 
 .card-thumbnail-wrap {
   width: 100%;
-  height: 200px;
+  height: 160px;
   overflow: hidden;
   border-bottom: 1px solid var(--border-subtle);
   position: relative;
@@ -171,15 +171,8 @@ body {
 
 @media (min-width: 992px) {
   .portal-card {
-    flex-direction: row;
-    min-height: 220px;
-  }
-  
-  .card-thumbnail-wrap {
-    width: 35%;
-    height: auto;
-    border-bottom: none;
-    border-right: 1px solid var(--border-subtle);
+    flex-direction: column;
+    height: 420px;
   }
 }
 
