@@ -71,11 +71,16 @@
 </head>
 <body>
     <!-- Consistent Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light" style="background: var(--bg-primary); border-bottom: 1px solid var(--border-subtle); padding: 12px 0;">
-      <div class="container" style="max-width: 1600px;">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="index.html" style="font-weight: 700; color: var(--text-primary); text-decoration: none; font-size: 16px;">
-          <i class="bi bi-house-door-fill"></i> 返回主页
+    <nav class="navbar navbar-expand-lg navbar-light" style="background: var(--bg-primary); border-bottom: 1px solid var(--border-subtle); height: 60px; display: flex; align-items: center; padding: 0; z-index: 1000;">
+      <div class="container" style="max-width: 1600px; display: flex; justify-content: space-between; align-items: center;">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="#" style="font-weight: 700; color: var(--text-primary); text-decoration: none; font-size: 1.25rem;">
+          <span>⚙️ HNXX印务 · 多模态视觉智能质检</span>
         </a>
+        <div>
+          <a href="index.html" style="font-weight: 500; color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 4px; transition: color 0.3s;" onmouseover="this.style.color='#595959'" onmouseout="this.style.color='var(--text-primary)'">
+            🏠 返回主页
+          </a>
+        </div>
       </div>
     </nav>
 
